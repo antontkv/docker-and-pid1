@@ -4,8 +4,9 @@ import signal
 from types import FrameType
 from time import sleep
 
-from noterm_wait import wait_forever
-
+def wait_forever():
+    while True:
+        sleep(1)
 
 def handler(signum: int, frame: FrameType):
     print(f"Received SIGTERM. Exiting.")
