@@ -80,6 +80,22 @@ python_noterm_docker_init() {
     time docker stop python_init
 }
 
+python_term_docker_init() {
+    echo -e "$GREEN[+] Launching python script in Docker container$NC"
+    docker run -d -v $PWD/term_wait.py:/term_wait.py --init --name python_init python:3.11.1-alpine python3 /term_wait.py
+    sleep 1
+    echo -e "$GREEN[+] ps command output in container:$NC"
+    echo ""
+    docker exec -it python_init ps -ef
+    echo -e "$GREEN[+] Stopping docker container and timing it. If it takes more then 10 seconds, it means"
+    echo -e "    that docker killing the process.$NC"
+    time docker stop python_init > /dev/null
+    echo -e "$GREEN[+] Container logs:$NC"
+    echo ""
+    docker logs python_init
+    docker rm python_init > /dev/null
+}
+
 case $1 in
     "python_noterm_bare" )
         python_noterm_bare;
@@ -95,5 +111,8 @@ case $1 in
         ;;
     "python_noterm_docker_init" )
         python_noterm_docker_init;
+        ;;
+    "python_term_docker_init" )
+        python_term_docker_init;
         ;;
 esac
