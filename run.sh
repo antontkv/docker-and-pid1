@@ -96,6 +96,22 @@ python_term_docker_init() {
     docker rm python_init > /dev/null
 }
 
+multi_python_docker_noinit() {
+    echo -e "$GREEN[+] Launching multiple python scripts in Docker container$NC"
+    docker run -d -v $PWD:/app --name multi_python_noinit python:3.11.1-bullseye bash /app/entrypoint.sh
+    sleep 1
+    echo -e "$GREEN[+] ps command output in container:$NC"
+    echo ""
+    docker exec -it multi_python_noinit ps -ef
+    echo -e "$GREEN[+] Stopping docker container and timing it. If it takes more then 10 seconds, it means"
+    echo -e "    that docker killing the process.$NC"
+    time docker stop multi_python_noinit > /dev/null
+    echo -e "$GREEN[+] Container logs:$NC"
+    echo ""
+    docker logs multi_python_noinit
+    docker rm multi_python_noinit > /dev/null
+}
+
 case $1 in
     "python_noterm_bare" )
         python_noterm_bare;
@@ -114,5 +130,8 @@ case $1 in
         ;;
     "python_term_docker_init" )
         python_term_docker_init;
+        ;;
+    "multi_python_docker_noinit" )
+        multi_python_docker_noinit;
         ;;
 esac
