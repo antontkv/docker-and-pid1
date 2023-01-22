@@ -23,6 +23,7 @@ python_term_bare() {
     echo "[+] PID of python script: $child_pid"
     echo "[+] Sending SIGTERM to PID $child_pid"
     kill -s TERM $child_pid
+    sleep 1
     if ps -p $child_pid > /dev/null
     then
         echo "[!] PID $child_pid is still running"
