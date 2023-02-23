@@ -77,3 +77,16 @@ Docker runs processes in namespaces, and the first process created gets PID 1 in
 And even if the process handles `SIGTERM`, it could spawn children. The parent process should propagate `SIGTERM` to its children. So the process with PID 1 inside the container should take the role of the init process on top of its core functions.
 
 Not every container should have some kind of init process. You could handle `SIGTERM` (or you don't mind your process of being killed with `SIGKILL`) and don't spawn any children. But you probably would want some kind of init process. For that, for example, you can use [tini](https://github.com/krallin/tini) and use `-g` argument with it to propagate `SIGTERM` to all processes inside the container.
+
+## Running example scripts
+
+There are some script that demonstrate different scenarios of running process in Docker. Execute `run.sh` with this arguments:
+
+- `python_noterm_bare` - Running python script that don't handle `SIGTERM` not inside Docker, then terminating it. It should terminate without problem.
+- `python_term_bare` - Running python script that handle `SIGTERM` not inside Docker, then terminating it. It should terminate without problem and also output the log message that it received `SIGTERM` signal.
+- `python_noterm_docker_noinit` - Running python script that don't handle `SIGTERM` inside Docker without init process, then terminating it. It should fail to terminate, and will be killed after 10 seconds.
+- `python_term_docker_noinit` - Running python script that handle `SIGTERM` inside Docker without init process, then terminating it. It should terminate without problem and also output the log message that it received `SIGTERM` signal.
+- `python_noterm_docker_init` - Running python script that don't handle `SIGTERM` inside Docker with init process, then terminating it. It should terminate without problem.
+- `python_term_docker_init` - Running python script that handle `SIGTERM` inside Docker with init process, then terminating it. It should terminate without problem and also output the log message that it received `SIGTERM` signal.
+- `multi_python_docker_noinit` - Running multiple python scripts (processes) that handle `SIGTERM` inside Docker without init process, then terminating it. It should fail to terminate, and will be killed after 10 seconds.
+- `multi_python_docker_init` - Running multiple python scripts (processes) that handle `SIGTERM` inside Docker with init process, then terminating it. It should terminate without problem and also each python process output the log message that it received `SIGTERM` signal.
