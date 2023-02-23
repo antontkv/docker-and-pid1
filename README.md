@@ -1,6 +1,6 @@
 # Docker and PID 1
 
-Exploring how not init processes run and terminate (or not) inside docker container running as PID 1.
+Exploring how non-init processes run and terminate (or not) inside docker container running as PID 1.
 
 ## Understanding how Linux protects process with PID 1
 
@@ -9,20 +9,20 @@ When the Linux kernel boots it starts one process in userland called init that w
 - start other processes
 - be the ancestor (direct or indirect) of all processes
 - adopt orphaned processes
-- terminal all processes on shutdown
+- terminate all processes on shutdown
 
 PID 1 is protected in Linux:
 
-- It will never receive any signal, if this process didn't explicitly created handle for this signal. For example, if you send `SIGTERM` to PID 1 process that didn't created handle for this signal, the OS will not send this signal and never terminate the process by default.
+- It will never receive any signal if this process didn't explicitly create a handle for this signal. For example, if you send `SIGTERM` to PID 1 process that didn't create a handle for this signal, the OS will not send this signal and never terminate the process by default.
 - It will never receive `SIGKILL` or `SIGSTOP` unless it comes from the ancestor namespace.
 
 So this means that you can't terminate or kill process with PID 1 like any other process.
 
 ### Looking under the hood
 
-At the time of writing, the latest stable version of Linux is 6.1, so I will look at its source code.
+At the time of writing, the latest stable version of Linux is 6.1, so we will examine the source code of this version.
 
-Looking ahead, I will say that we are interested in how the init process gets the flag `SIGNAL_UNKILLABLE`. Since this flag determents which processes can ignore signals.
+Our focus is on understanding how the init process obtains the `SIGNAL_UNKILLABLE` flag, which determines which processes can ignore signals.
 
 This describes how PID 1 in any namespace gets the `SIGNAL_UNKILLABLE` flag:
 
@@ -64,11 +64,11 @@ Now that PID 1 has the `SIGNAL_UNKILLABLE` flag, let's see how signals behave wh
       - The signal **is not** `SIGKILL` or `SIGSTOP`, so this check `sig_kernel_only(sig)` will return false, so the `force` variable is irrelevant. Since the whole expression will be false.
       - If the signal **is** `SIGKILL` or `SIGSTOP`, then `force` is relevant. If it is set to true, meaning that the signal coming from the ancestor namespace, the whole expression will be true and the signal will be sent. If it was false, meaning that the signal coming from the current namespace, the whole expression will be false and the signal will be ignored.
 
-To sum up the signal to PID 1 will be ignored if:
+To summarize, signals sent to PID 1 will be ignored if:
 
-- The process has the `SIGNAL_UNKILLABLE` flag set (any process with PID 1).
-- The process didn't created a handler for the signal.
-- If the signal is `SIGKILL` it should be coming from the process namespace.
+- The process has the `SIGNAL_UNKILLABLE` flag set, which is the case for any process with PID 1.
+- The process did not create a handler for the signal.
+- The signal is `SIGKILL` or `SIGSTOP` and it's sent from the process's own namespace.
 
 ## How that relates to Docker
 
